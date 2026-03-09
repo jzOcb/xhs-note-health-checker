@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — XHS Note Health Checker</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; }
+h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+h2 { margin-top: 30px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+th { background: #f5f5f5; }
+a { color: #0066cc; }
+</style>
+</head>
+<body>
+<h1>Privacy Policy — XHS Note Health Checker</h1>
+<p><strong>Last updated:</strong> March 9, 2026</p>
+
+<h2>Overview</h2>
+<p>XHS Note Health Checker is a Chrome extension that helps Xiaohongshu (小红书) creators monitor the health status of their published notes. This policy explains what data the extension accesses and how it is handled.</p>
+
+<h2>Data Collection</h2>
+<p><strong>We do not collect, transmit, or store any personal data on external servers.</strong></p>
+<p>All data processing happens locally in your browser.</p>
+
+<h2>Data Access</h2>
+<p>The extension accesses the following data <strong>only on <code>creator.xiaohongshu.com</code></strong>:</p>
+<ul>
+<li><strong>Note metadata</strong>: Title, level status, and tag count from the XHS Creator Dashboard API responses</li>
+<li><strong>Local storage</strong>: Note health history is stored in your browser's localStorage and chrome.storage.local for the popup display and historical tracking</li>
+</ul>
+
+<h2>Data Storage</h2>
+<ul>
+<li>All data is stored <strong>locally in your browser</strong></li>
+<li>No data is sent to any external server, analytics service, or third party</li>
+<li>Data can be cleared by removing the extension or clearing browser data</li>
+</ul>
+
+<h2>Permissions</h2>
+<table>
+<tr><th>Permission</th><th>Purpose</th></tr>
+<tr><td>scripting</td><td>Inject content script to read note health data from the XHS Creator Dashboard</td></tr>
+<tr><td>storage</td><td>Store note health history locally for the popup panel</td></tr>
+<tr><td>host_permissions: creator.xiaohongshu.com</td><td>Access the XHS Creator Dashboard only</td></tr>
+</table>
+
+<h2>Third-Party Services</h2>
+<p>This extension does not use any third-party services, analytics, or tracking.</p>
+
+<h2>Contact</h2>
+<p>If you have questions, please open an issue on our <a href="https://github.com/jzOcb/xhs-note-health-checker">GitHub repository</a>.</p>
+
+<h2>Open Source</h2>
+<p>This extension is open source under the MIT License. Source code: <a href="https://github.com/jzOcb/xhs-note-health-checker">github.com/jzOcb/xhs-note-health-checker</a></p>
+</body>
+</html>
