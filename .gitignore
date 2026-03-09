@@ -1,0 +1,5 @@
+node_modules/
+.plasmo/
+build/chrome-mv3-dev/
+.env
+.DS_Store

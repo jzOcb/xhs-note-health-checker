@@ -1,0 +1,34 @@
+{
+  "name": "xhs-level-checker",
+  "displayName": "XHS Note Health Checker",
+  "version": "1.0.0",
+  "description": "小红书笔记健康检测器 — 显示笔记 level 限流状态、敏感词诊断、历史追踪",
+  "author": "Jason",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build && plasmo package",
+    "package": "plasmo package"
+  },
+  "dependencies": {
+    "plasmo": "0.90.5",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.260",
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "typescript": "5.3.3"
+  },
+  "manifest": {
+    "name": "XHS Note Health Checker",
+    "host_permissions": [
+      "https://creator.xiaohongshu.com/*",
+      "https://www.xiaohongshu.com/*"
+    ],
+    "permissions": [
+      "storage"
+    ]
+  }
+}
