@@ -15,8 +15,6 @@ export const config: PlasmoCSConfig = {
   world: "MAIN"
 }
 
-const TARGET_PATH = "/api/galaxy/v2/creator/note/user/posted"
-
 let latestNotes: NoteDiagnostics[] = []
 
 const styleId = "xhs-health-checker-style"
@@ -34,15 +32,6 @@ const ensureStyles = () => {
   .xhs-health-flag { font-size: 14px; line-height: 1; cursor: help; }
   `
   document.documentElement.appendChild(style)
-}
-
-const isTargetUrl = (url: string) => {
-  try {
-    const parsed = new URL(url, window.location.origin)
-    return parsed.pathname.includes(TARGET_PATH)
-  } catch {
-    return url.includes(TARGET_PATH)
-  }
 }
 
 const extractNoteArray = (payload: any): any[] => {
@@ -101,8 +90,8 @@ const normalizeNotes = (payload: any): NoteDiagnostics[] => {
       const noteId = String(
         note?.note_id ?? note?.noteId ?? note?.id ?? note?.item_id ?? note?.display_id ?? ""
       )
-      const title = String(note?.title ?? note?.note_title ?? note?.name ?? "").trim()
-      const levelValue = Number(note?.level ?? note?.distribution_level ?? note?.status_level ?? NaN)
+      const title = String(note?.display_title ?? note?.title ?? note?.note_title ?? note?.name ?? "").trim()
+      const levelValue = Number(note?.level_ ?? note?.level ?? note?.distribution_level ?? note?.status_level ?? NaN)
       const level = Number.isFinite(levelValue) ? levelValue : 1
       const tagCount = normalizeTagCount(note)
       const sensitiveHits = extractSensitiveHits(title)
@@ -158,18 +147,15 @@ const findTitleElement = (note: NoteDiagnostics): HTMLElement | null => {
   return null
 }
 
-const removeExisting = (anchor: HTMLElement) => {
-  const existing = anchor.parentElement?.querySelectorAll('[data-xhs-health-badge="1"]')
-  existing?.forEach((node) => node.remove())
-}
-
 const renderBadgeForNote = (note: NoteDiagnostics) => {
   const target = findTitleElement(note)
   if (!target || !target.parentElement) {
     return
   }
 
-  removeExisting(target)
+  // Skip if already rendered for this noteId
+  if (renderedNoteIds.has(note.noteId)) return
+  renderedNoteIds.add(note.noteId)
 
   const meta = getLevelMeta(note.level)
 
@@ -201,12 +187,18 @@ const renderBadgeForNote = (note: NoteDiagnostics) => {
     wrapper.appendChild(tag)
   }
 
-  target.insertAdjacentElement("afterend", wrapper)
+  // Insert inside the title element (at end) so badge stays inline
+  target.appendChild(wrapper)
 }
 
+let isRendering = false
+const renderedNoteIds = new Set<string>()
+
 const renderAllBadges = () => {
+  isRendering = true
   ensureStyles()
   latestNotes.forEach(renderBadgeForNote)
+  isRendering = false
 }
 
 const updateHistory = (notes: NoteDiagnostics[]) => {
@@ -241,7 +233,11 @@ const handlePayload = async (payload: any) => {
     return
   }
 
-  latestNotes = notes
+  // Merge with existing notes for pagination support (dedup by noteId)
+  const map = new Map<string, NoteDiagnostics>()
+  for (const n of latestNotes) map.set(n.noteId, n)
+  for (const n of notes) map.set(n.noteId, n)
+  latestNotes = Array.from(map.values())
   renderAllBadges()
 
   try {
@@ -251,81 +247,43 @@ const handlePayload = async (payload: any) => {
   }
 }
 
-const patchFetch = () => {
-  const originalFetch = window.fetch
+// Strategy: Hook JSON.parse instead of fetch/XHR to avoid XHS anti-tampering.
+const patchJsonParse = () => {
+  const originalParse = JSON.parse
 
-  window.fetch = async (...args) => {
-    const response = await originalFetch(...args)
+  JSON.parse = function (
+    this: typeof JSON,
+    text: string,
+    reviver?: (key: string, value: any) => any
+  ): any {
+    const result = originalParse.call(this, text, reviver)
 
-    try {
-      const request = args[0]
-      const url = typeof request === "string" ? request : request?.url || ""
-      if (isTargetUrl(url)) {
-        const cloned = response.clone()
-        const payload = await cloned.json()
-        void handlePayload(payload)
-      }
-    } catch (error) {
-      console.warn("[XHS Health Checker] fetch parse failed:", error)
+    // Quick structural check — only match notes API response shape
+    if (
+      result &&
+      typeof result === "object" &&
+      result.success === true &&
+      result.data &&
+      Array.isArray(result.data.notes) &&
+      result.data.notes.length > 0
+    ) {
+      // Defer processing to not block the caller
+      setTimeout(() => handlePayload(result), 0)
     }
 
-    return response
-  }
-}
-
-const patchXhr = () => {
-  const originalOpen = XMLHttpRequest.prototype.open
-
-  XMLHttpRequest.prototype.open = function (
-    method: string,
-    url: string | URL,
-    async?: boolean,
-    username?: string | null,
-    password?: string | null
-  ) {
-    ;(this as any).__xhsHealthUrl = typeof url === "string" ? url : url?.toString() || ""
-    return originalOpen.call(this, method, url, async ?? true, username, password)
-  }
-
-  const originalSend = XMLHttpRequest.prototype.send
-
-  XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
-    this.addEventListener("load", () => {
-      const url = (this as any).__xhsHealthUrl || ""
-      if (!isTargetUrl(url)) {
-        return
-      }
-
-      try {
-        if (this.responseType === "json") {
-          void handlePayload(this.response)
-          return
-        }
-
-        const raw = this.responseText
-        if (!raw) {
-          return
-        }
-
-        const payload = JSON.parse(raw)
-        void handlePayload(payload)
-      } catch (error) {
-        console.warn("[XHS Health Checker] xhr parse failed:", error)
-      }
-    })
-
-    return originalSend.call(this, body)
+    return result
   }
 }
 
 const bootstrap = () => {
-  patchFetch()
-  patchXhr()
+  patchJsonParse()
 
+  // Debounced MutationObserver for re-rendering badges after DOM changes
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null
   const observer = new MutationObserver(() => {
-    if (latestNotes.length > 0) {
-      renderAllBadges()
-    }
+    if (isRendering || latestNotes.length === 0) return
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => renderAllBadges(), 500)
   })
 
   observer.observe(document.documentElement, {
