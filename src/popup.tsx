@@ -162,7 +162,7 @@ function IndexPopup() {
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.35 }}>{note.title}</div>
                 {reasonText(note) && (
-                  <div style={{ ...mutedStyle, marginTop: 2 }}>⚠️ {reasonText(note)}</div>
+                  <div style={{ ...mutedStyle, marginTop: 2 }}>⚠️ {reasonText(note)} <span style={{ opacity: 0.6 }}>(beta)</span></div>
                 )}
                 {history.length >= 2 && history[0].level !== history[history.length - 1].level && (
                   <div style={{ ...mutedStyle, marginTop: 2, color: history[history.length - 1].level > history[0].level ? "#16a34a" : "#dc2626" }}>

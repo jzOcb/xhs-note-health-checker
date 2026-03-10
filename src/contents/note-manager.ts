@@ -175,7 +175,7 @@ const renderBadgeForNote = (note: NoteDiagnostics) => {
     const sensitive = document.createElement("span")
     sensitive.className = "xhs-health-flag"
     sensitive.textContent = "⚠️"
-    sensitive.title = `命中敏感词：${note.sensitiveHits.join("、")}`
+    sensitive.title = `命中敏感词 (beta)：${note.sensitiveHits.join("、")}`
     wrapper.appendChild(sensitive)
   }
 
