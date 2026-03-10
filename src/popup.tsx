@@ -171,8 +171,8 @@ function IndexPopup() {
                     const first = history.find((h) => h.level === note.level)
                     if (!first) return `首次检测到 ${note.levelLabel}`
                     const days = Math.floor((Date.now() - first.timestamp) / 86400000)
-                    if (days === 0) return "今天检测到限流"
-                    return `已限流 ${days} 天`
+                    if (days === 0) return "今天首次检测到"
+                    return `首次检测于 ${days} 天前`
                   })()}
                 </div>
               </div>
