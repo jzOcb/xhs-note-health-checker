@@ -6,7 +6,7 @@
   "author": "Jason",
   "scripts": {
     "dev": "plasmo dev",
-    "build": "plasmo build && plasmo package",
+    "build": "plasmo build && python3 scripts/fix-manifest.py && plasmo package",
     "package": "plasmo package"
   },
   "dependencies": {
